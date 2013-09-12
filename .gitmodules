@@ -1,0 +1,3 @@
+[submodule "sites/all/modules/views_bulk_operations"]
+	path = sites/all/modules/views_bulk_operations
+	url = http://git.drupal.org/project/views_bulk_operations.git
