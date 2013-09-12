@@ -1,0 +1,29 @@
+<?php
+/**
+ * implements hook_menu
+ */
+function testh_menu(){
+  $item = array();
+  $item['testh'] = array(
+      'title' => 'Test Hook',
+      'page callback' => 'testhook_callback',
+      'menu_name' => 'main-menu',
+      'access callback' => TRUE,     
+  );
+  return $item;
+}
+
+/**
+ * callback
+ */
+function testhook_callback(){
+  return ' test hook';
+}
+
+function testh_testpopups_layouts_alter(&$data){
+  
+  //var_dump($data);
+  $data = 8;
+  
+  return '';
+}

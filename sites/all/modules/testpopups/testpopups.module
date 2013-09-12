@@ -1,0 +1,188 @@
+<?php
+/**
+ *  Implements hook_menu
+ */
+
+function testpopups_menu(){
+  $item = array();
+  $item['testpopups/%ctools_js/comments'] = array(
+      'title' => 'Popups',
+      'page arguments' => array(1),
+      'page callback' => 'popups_callback',
+      'access arguments' => TRUE,
+      'access callback' => TRUE,      
+  );
+  return $item;
+}
+
+/**
+ * Implements page callback
+ */
+function popups_callback($js = NULL){
+  $webform_nid = 8;
+  
+  $layouts = array();
+  $layouts = module_invoke_all('testpopups_layouts');
+  
+  //$webform_nid = $layouts[0];
+  
+  /*$data = array(
+      'id' => &$webform_nid,
+  );*/
+  
+ drupal_alter('testpopups_layouts', $webform_nid);
+  
+  /*foreach (module_implements('testpopups_layouts') as $module){
+    $function = $module . '_testpopups_layouts';
+    
+    $function($arg1);
+  }*/
+ 
+
+  $node = node_load($webform_nid); // Load webform node
+  $submission =  (object) array(); // empty object required by webform
+     
+  // React without the modal
+  if (!$js) {
+    // Webform requires more parameters than standard forms
+    return drupal_get_form('webform_client_form_' . $webform_nid, $node, $submission);
+  }
+  // React with the modal
+  // Add modal components
+  ctools_include('modal');
+  ctools_include('ajax');
+  $form_state = array(
+    'title' => $node->title,
+    'ajax' => TRUE,
+  );
+  // Fetch webform form stuff
+  $output = drupal_get_form('webform_client_form_'.$webform_nid, $node, $submission);
+  // Merge node content (except webform) and webform form before rendering  
+  $node_view = node_view($node); // Prepare webform for rendering
+
+  if (!empty($form_state['ajax'])) {
+    $output = ctools_modal_form_render($form_state, $output);
+  }
+  print ajax_render($output);
+  
+}
+/**
+ * 
+ * Implement hook form_alter
+ */
+
+function testpopups_form_alter(&$form, &$form_state, $form_id) {
+  if($form_id == 'webform_client_form_7'){
+    $form['submit'][] = 'testpopups_custom_webform_submit';
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function testpopups_block_info() {
+  $blocks['add_comments'] = array(
+    'info' => t('Add comments'),
+    'cache' => DRUPAL_NO_CACHE,
+  ); 
+  return $blocks;
+}
+ 
+/**
+ * Implements hook_block_view().
+ */
+function testpopups_block_view($delta = '') {
+  $block = array();
+  if ($delta == 'add_comments') {    
+    $block['content'] = webform_block_content();       
+  } 
+  return $block;
+}
+
+function webform_block_content(){
+  
+    ctools_include('ajax');
+    ctools_include('modal');
+    ctools_modal_add_js();
+    $node_id = 7;
+    /**********************************/
+    $sample_style = array(
+    'webform' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 265,
+        'height' => 350,
+        'addWidth' => 20,
+        'addHeight' => 15,
+      ),
+      'modalOptions' => array(
+        'opacity' => .5,
+        'background-color' => '#000',
+      ),
+      'animation' => 'slideDown',
+      'animationSpeed' => 'slow',
+      //'modalTheme' => 'testpopupsModal',
+      'throbber' => theme('image', array('path' => ctools_image_path('ajax-loader.gif', 'testpopups'), 'alt' => t('Loading...'), 'title' => t('Loading'))),
+      'closeText' => t('Close'),
+    ),
+  );
+    drupal_add_js($sample_style, 'setting');
+
+  // Since we have our js, css and images in well-known named directories,
+  // CTools makes it easy for us to just use them without worrying about
+  // using drupal_get_path() and all that ugliness.
+  ctools_add_js('webform_popup', 'testpopups');
+  ctools_add_css('webform_popup', 'testpopups');
+
+  // Create a list of clickable links.
+  $links = array();
+    
+    /**************************************/
+    $links[] = ctools_modal_text_button(t('Review'), 'testpopups/nojs/comments', '', 'ctools-modal-webform');
+    //$block['content'] = testpopups_block_content();
+    $output = theme('item_list', array('items' => $links));
+     
+    return array('markup' => array('#markup' => $output));       
+}
+
+
+
+
+/*function testpopups_block_content(){
+  // Include the CTools tools that we need.
+  ctools_include('ajax');
+  ctools_include('modal');
+
+  // Add CTools' javascript to the page.
+  ctools_modal_add_js();
+
+  // Create our own javascript that will be used to theme a modal.
+  $sample_style = array(
+    'testpopups-style' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 265,
+        'height' => 350,
+        'addWidth' => 20,
+        'addHeight' => 15,
+      ),
+      'modalOptions' => array(
+        'opacity' => .5,
+        'background-color' => '#000',
+      ),
+      'animation' => 'slideDown',
+      'animationSpeed' => 'slow',
+      'modalTheme' => 'testpopupsModal',
+      'throbber' => theme('image', array('path' => ctools_image_path('ajax-loader.gif', 'testpopups'), 'alt' => t('Loading...'), 'title' => t('Loading'))),
+      'closeText' => t('Close'),
+    ),
+  );
+  drupal_add_js($sample_style, 'setting');
+  ctools_add_js('testpopups', 'testpopups');
+  ctools_add_css('testpopups', 'testpopups');
+  $links = array();
+  $links[] = ctools_modal_text_button(t('Hi, maneger!'), 'testpopup/nojs/comments', t('Hi, maneger!'),  'ctools-modal-testpopups-style');
+  $output = theme('item_list', array('items' => $links));
+
+  return array('markup' => array('#markup' => $output));
+}*/

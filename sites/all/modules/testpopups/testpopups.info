@@ -1,0 +1,5 @@
+name = testpopups
+description = module for test popups
+core = 7.x
+dependencies[] = ctools
+dependencies[] = views

@@ -1,0 +1,142 @@
+<?php
+/**
+ * Implements hook_menu
+ */
+
+function mymodule_menu(){
+  $items = array();
+  $items['mymodule'] = array(
+      'title' => 'Custom',
+      'page callback' => 'mymodule_calback',
+      'menu_name' => 'main-menu',
+      'access callback' => TRUE,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_preprocess_views_view_fields().
+ */
+/*function mymodule_preprocess_views_view_fields(&$var){
+  dpm($var);
+}*/
+
+function mymodule_calback() {
+  
+  
+  /* $layouts = array();
+  $layouts = module_invoke_all('testpopups_layouts');
+  
+  var_dump($layouts);*/
+  
+  $node = db_select('node', 'n')
+               ->fields('n', array('nid', 'uid', 'title'))
+               //->condition('n.uid', $var['row']->uid)
+               ->execute()
+               ->fetchAll();           
+  $item = array();
+
+  /*foreach ($node as $n){
+    $path = 'node/'.$n->nid;
+    $item[] = l($n->title, $path);
+  }*/
+       
+  $users = db_select('users','us')
+          ->fields('us', array('uid','name', 'mail', 'created', 'access', 'login', 'language', ))
+          ->execute()
+          ->fetchAll();
+  
+          
+  $roles = db_select('users_roles','ur');
+  $roles ->innerJoin('role', 'r', 'ur.rid=r.rid');
+  $roles ->fields('ur', array('uid'));
+  $roles ->fields('r', array('name'));
+      
+  $res = $roles ->execute();
+  $rol = array();
+  while ($record = $res->fetchAssoc()){         
+    //var_dump($record);
+    $rol[] = array(                       //масив ід і ролєй користувачів
+        'uid' => $record['uid'],
+        'name' => $record['name'],
+    );
+  }
+   /*var_dump($rol);*/
+  
+  $var = theme('item_list', array('items' => $item));
+  $header = array(
+      array('data' => t('username'), 'class' =>array('views-field views-field-name active')),
+      array('data' => '<input type="checkbox">'),
+      array('data' => t('Cancel link')),
+      array('data' => t('Created date')),
+      array('data' => t('Email')),
+      array('data' => t('Edit link')),
+      array('data' => t('Language')),
+      array('data' => t('Last acces')),
+      array('data' => t('Last login')),
+      array('data' => t('Link')),
+      array('data' => t('Roles')),      
+  );
+  foreach ($users as $us){              // вивід юзерів
+    if(!empty($us->name)){
+      
+      $nd = array();
+      foreach ($node as $n){            // ноди юзерів
+        if($n->uid == $us->uid){
+          /*'nid' => $n->nid,
+          'title' => $n->title,*/
+            $path = 'node/'.$n->nid;
+            $link = l($n->title, $path);
+            $nd[] = $link;                
+        }
+      }
+      
+      foreach ($rol as $r){            // ролі юзерів
+        if($r['uid'] == $us->uid){
+          $role = $r['name'];
+        }
+      }
+      
+      //var_dump($nd);
+      $ch = '<input type="checkbox">';
+      $b = l($us -> name, 'user/'.$us -> uid) . theme('item_list', array('items' => $nd));
+      if(empty($us->language)){
+        $lang = l('English', 'user/'.$us -> uid);
+      }
+      if (!$us->access){
+        $date = "null";
+      }  else {
+        $date = date('l, F d, - Y H:m',$us->access);
+      }
+      
+      if (!$us->login){
+        $log = "null";
+      }  else {
+         $log = date('l, F d, - Y H:m',$us->login);
+      }
+      
+     
+      
+      
+      $row[] = array(
+        array('data' => $b),
+        array('data' => $ch),
+        array('data' => l('cancel', 'user/'.$us -> uid.'/cancel?destination=user')),
+        array('data' => date("d.m.Y",$us -> created)),
+        array('data' => $us->mail),
+        array('data' => l('edit', "user/{$us -> uid}/cancel?destination=user")),
+        array('data' => $lang),
+        array('data' => $date),
+        array('data' => $log),
+        array('data' => l('view', 'user/'.$us -> uid)),
+        array('data' => $role),
+      );
+    
+    }
+  }
+ 
+  
+  $tab = theme('table', array('header' => $header, 'rows' => $row));
+  
+  return $var.$tab;
+}
