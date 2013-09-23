@@ -1,3 +1,9 @@
 [submodule "sites/all/modules/views_bulk_operations"]
 	path = sites/all/modules/views_bulk_operations
 	url = http://git.drupal.org/project/views_bulk_operations.git
+[submodule "p"]
+	path = p
+	url = git://git.drupal.org/project/xmlsitemap.git
+[submodule "sites/all/modules/globalredirect"]
+	path = sites/all/modules/globalredirect
+	url = git://drupalcode.org/project/globalredirect.git
