@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * \u0420\u0435\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f hook_schema()
+ */
+function album_schema() {
+  $schema['albums'] = array(
+    'fields' => array(
+      'aid' => array(
+        'description' => 'Album ID',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'Album title',
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => TRUE,
+      ),
+      'year' => array(
+        'description' => 'Album year',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('aid'),
+  );
+ 
+  return $schema;
+}

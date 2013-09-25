@@ -1,0 +1,4 @@
+name = album
+description = album
+core = 7.x
+dependencies[] = entity
